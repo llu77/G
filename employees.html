@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الموظفين - SymbolAI Financial ERP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/tailwindcss@3.3.0/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Performance optimizations -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    
+    <style>
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-effect { 
+            backdrop-filter: blur(10px); 
+            background: rgba(255, 255, 255, 0.1); 
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .hover-lift { 
+            transition: transform 0.3s ease, box-shadow 0.3s ease; 
+        }
+        
+        .hover-lift:hover { 
+            transform: translateY(-5px); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .arabic-text { font-family: 'Cairo', sans-serif; }
+        
+        .sidebar-item {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+        
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-right: 4px solid #3b82f6;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading { 
+            animation: pulse 2s infinite; 
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Table styles */
+        .table-row {
+            transition: all 0.3s ease;
+        }
+        
+        .table-row:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-5px);
+        }
+        
+        /* Search and filter styles */
+        .search-container {
+            position: relative;
+        }
+        
+        .search-container input:focus + .search-icon {
+            color: #3b82f6;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+        }
+    </style>
+</head>
+<body class="arabic-text">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center z-50">
+        <div class="text-center text-white">
+            <i class="fas fa-users text-6xl mb-4 loading"></i>
+            <h2 class="text-2xl font-bold mb-2">SymbolAI Financial ERP</h2>
+            <p class="text-lg">جاري تحميل إدارة الموظفين...</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="min-h-screen" style="display: none;" id="main-content">
+        <!-- Header -->
+        <header class="glass-effect border-b border-white border-opacity-20">
+            <div class="container mx-auto px-4 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <button id="sidebar-toggle" class="md:hidden text-white mr-4">
+                            <i class="fas fa-bars text-xl"></i>
+                        </button>
+                        <h1 class="text-2xl font-bold text-white">
+                            <i class="fas fa-calculator mr-2"></i>
+                            SymbolAI Financial ERP
+                        </h1>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button class="text-white hover:text-gray-300 relative" onclick="showNotifications()">
+                                <i class="fas fa-bell text-xl"></i>
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center" id="notification-count">2</span>
+                            </button>
+                        </div>
+                        
+                        <!-- User Profile -->
+                        <div class="relative">
+                            <button class="flex items-center text-white hover:text-gray-300" onclick="toggleUserMenu()">
+                                <img src="https://via.placeholder.com/32x32/3b82f6/ffffff?text=SA" alt="User" class="w-8 h-8 rounded-full mr-2">
+                                <span class="hidden md:inline">مدير النظام</span>
+                                <i class="fas fa-chevron-down ml-1 text-sm"></i>
+                            </button>
+                            
+                            <!-- User Menu Dropdown -->
+                            <div id="user-menu" class="hidden absolute top-full left-0 mt-2 w-48 glass-effect rounded-lg border border-white border-opacity-20 z-50">
+                                <div class="py-2">
+                                    <a href="/profile" class="block px-4 py-2 text-white hover:bg-white hover:bg-opacity-10">
+                                        <i class="fas fa-user mr-2"></i>الملف الشخصي
+                                    </a>
+                                    <a href="/settings" class="block px-4 py-2 text-white hover:bg-white hover:bg-opacity-10">
+                                        <i class="fas fa-cog mr-2"></i>الإعدادات
+                                    </a>
+                                    <div class="border-t border-white border-opacity-20 my-2"></div>
+                                    <a href="/logout" class="block px-4 py-2 text-red-400 hover:bg-white hover:bg-opacity-10">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>تسجيل الخروج
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex">
+            <!-- Sidebar -->
+            <aside class="sidebar fixed right-0 top-0 h-full w-64 glass-effect border-l border-white border-opacity-20 transform transition-transform duration-300 z-40 md:relative md:translate-x-0" id="sidebar">
+                <div class="pt-20 md:pt-4 p-4">
+                    <nav class="space-y-2">
+                        <a href="/" class="sidebar-item flex items-center p-3 rounded-lg text-white hover:text-gray-200">
+                            <i class="fas fa-tachometer-alt mr-3 w-5 text-center"></i>
+                            <span class="font-medium">لوحة التحكم</span>
+                        </a>
+                        
+                        <a href="/employees" class="sidebar-item active flex items-center p-3 rounded-lg text-white">
+                            <i class="fas fa-users mr-3 w-5 text-center"></i>
+                            <span class="font-medium">إدارة الموظفين</span>
+                        </a>
+                        
+                        <a href="/payroll" class="sidebar-item flex items-center p-3 rounded-lg text-white hover:text-gray-200">
+                            <i class="fas fa-calculator mr-3 w-5 text-center"></i>
+                            <span class="font-medium">حساب الرواتب</span>
+                        </a>
+                        
+                        <a href="/reports" class="sidebar-item flex items-center p-3 rounded-lg text-white hover:text-gray-200">
+                            <i class="fas fa-chart-bar mr-3 w-5 text-center"></i>
+                            <span class="font-medium">التقارير</span>
+                        </a>
+                        
+                        <a href="/settings" class="sidebar-item flex items-center p-3 rounded-lg text-white hover:text-gray-200">
+                            <i class="fas fa-cog mr-3 w-5 text-center"></i>
+                            <span class="font-medium">الإعدادات</span>
+                        </a>
+                        
+                        <div class="border-t border-white border-opacity-20 my-4"></div>
+                        
+                        <a href="/help" class="sidebar-item flex items-center p-3 rounded-lg text-white hover:text-gray-200">
+                            <i class="fas fa-question-circle mr-3 w-5 text-center"></i>
+                            <span class="font-medium">المساعدة</span>
+                        </a>
+                        
+                        <a href="/logout" class="sidebar-item flex items-center p-3 rounded-lg text-red-400 hover:text-red-300">
+                            <i class="fas fa-sign-out-alt mr-3 w-5 text-center"></i>
+                            <span class="font-medium">تسجيل الخروج</span>
+                        </a>
+                    </nav>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 p-6 pb-20 md:pb-6">
+                <div class="container mx-auto">
+                    <!-- Page Header -->
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 fade-in">
+                        <div>
+                            <h2 class="text-3xl font-bold text-white mb-2">
+                                <i class="fas fa-users mr-3"></i>
+                                إدارة الموظفين
+                            </h2>
+                            <p class="text-gray-300">إدارة بيانات الموظفين والرواتب والحضور</p>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0">
+                            <button onclick="showImportDialog()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition">
+                                <i class="fas fa-upload mr-2"></i>
+                                استيراد بيانات
+                            </button>
+                            <button onclick="window.location.href='/employees/add'" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                                <i class="fas fa-user-plus mr-2"></i>
+                                إضافة موظف
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filters -->
+                    <div class="glass-effect rounded-xl p-6 mb-6 fade-in">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <!-- Search -->
+                            <div class="search-container md:col-span-2">
+                                <label for="search" class="block text-white text-sm font-medium mb-2">البحث عن موظف</label>
+                                <div class="relative">
+                                    <input type="text" id="search" placeholder="ابحث باسم الموظف أو الرقم الوظيفي..." 
+                                           class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           onkeyup="searchEmployees()">
+                                    <i class="fas fa-search search-icon absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                                </div>
+                            </div>
+                            
+                            <!-- Department Filter -->
+                            <div>
+                                <label for="department-filter" class="block text-white text-sm font-medium mb-2">القسم</label>
+                                <select id="department-filter" onchange="filterEmployees()" 
+                                        class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">جميع الأقسام</option>
+                                    <option value="الإدارة">الإدارة</option>
+                                    <option value="تقنية المعلومات">تقنية المعلومات</option>
+                                    <option value="المبيعات">المبيعات</option>
+                                    <option value="المالية">المالية</option>
+                                    <option value="العمليات">العمليات</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Status Filter -->
+                            <div>
+                                <label for="status-filter" class="block text-white text-sm font-medium mb-2">الحالة</label>
+                                <select id="status-filter" onchange="filterEmployees()" 
+                                        class="w-full bg-white bg-opacity-10 border border-white border-opacity-20 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="">جميع الحالات</option>
+                                    <option value="نشط">نشط</option>
+                                    <option value="في إجازة">في إجازة</option>
+                                    <option value="منتهية خدماته">منتهية خدماته</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Employees Table -->
+                    <div class="glass-effect rounded-xl overflow-hidden fade-in">
+                        <div class="p-6 border-b border-white border-opacity-20">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-xl font-bold text-white">
+                                    <i class="fas fa-list mr-2"></i>
+                                    قائمة الموظفين
+                                </h3>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-gray-300 text-sm">إجمالي الموظفين: </span>
+                                    <span class="text-white font-bold" id="employees-count">47</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-white bg-opacity-10">
+                                    <tr>
+                                        <th class="px-6 py-3 text-right text-white font-medium">الموظف</th>
+                                        <th class="px-6 py-3 text-right text-white font-medium">القسم</th>
+                                        <th class="px-6 py-3 text-right text-white font-medium">المنصب</th>
+                                        <th class="px-6 py-3 text-right text-white font-medium">الراتب</th>
+                                        <th class="px-6 py-3 text-right text-white font-medium">تاريخ التعيين</th>
+                                        <th class="px-6 py-3 text-right text-white font-medium">الحالة</th>
+                                        <th class="px-6 py-3 text-right text-white font-medium">الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employees-table-body">
+                                    <!-- Employees will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between mt-6">
+                        <div class="text-gray-300 text-sm">
+                            عرض <span id="showing-start">1</span> إلى <span id="showing-end">10</span> من <span id="total-employees-count">47</span> موظف
+                        </div>
+                        
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changePage(-1)" class="bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-3 py-2 rounded-lg transition" id="prev-page">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                            <span class="text-white px-4" id="current-page">1</span>
+                            <button onclick="changePage(1)" class="bg-white bg-opacity-10 hover:bg-opacity-20 text-white px-3 py-2 rounded-lg transition" id="next-page">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-effect border-t border-white border-opacity-20 mt-12">
+        <div class="container mx-auto px-4 py-6 text-center">
+            <p class="text-gray-300 text-sm">
+                <i class="fas fa-shield-alt mr-2"></i>
+                محمي بأحدث تقنيات الأمان | 
+                <i class="fas fa-rocket mr-2 ml-2"></i>
+                مدعوم بـ Cloudflare Workers
+            </p>
+            <p class="text-gray-400 text-xs mt-2">
+                النسخة 3.0 - متعدد الصفحات والوظائف | آخر تحديث: ديسمبر 2024
+            </p>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <!-- Import Data Modal -->
+    <div id="import-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="glass-effect rounded-lg p-6 max-w-md mx-4 w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">استيراد بيانات الموظفين</h3>
+                <button onclick="closeImportDialog()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="border-2 border-dashed border-white border-opacity-30 rounded-lg p-6 text-center">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                    <p class="text-white mb-2">قم بسحب وإسقاط ملف Excel هنا</p>
+                    <p class="text-gray-300 text-sm">أو</p>
+                    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)">
+                    <button onclick="document.getElementById('file-input').click()" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+                        اختيار ملف
+                    </button>
+                </div>
+                
+                <div class="text-sm text-gray-300">
+                    <p class="mb-2">الملف يجب أن يحتوي على الأعمدة التالية:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>الاسم الكامل</li>
+                        <li>البريد الإلكتروني</li>
+                        <li>القسم</li>
+                        <li>المنصب</li>
+                        <li>الراتب</li>
+                    </ul>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button onclick="downloadTemplate()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition">
+                        <i class="fas fa-download mr-2"></i>
+                        تحميل قالب
+                    </button>
+                    <button onclick="closeImportDialog()" class="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition">
+                        إلغاء
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Details Modal -->
+    <div id="employee-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="glass-effect rounded-lg p-6 max-w-2xl mx-4 w-full max-h-screen overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white" id="employee-modal-title">تفاصيل الموظف</h3>
+                <button onclick="closeEmployeeModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="employee-modal-content">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Sample employees data
+        let employees = [
+            {
+                id: 1,
+                name: 'أحمد محمد عبد الله',
+                email: 'ahmed.mohammed@company.com',
+                department: 'تقنية المعلومات',
+                position: 'مطور برمجيات أول',
+                salary: 18000,
+                hireDate: '2023-01-15',
+                status: 'نشط',
+                phone: '0501234567',
+                address: 'حي الملك فهد، الرياض'
+            },
+            {
+                id: 2,
+                name: 'فاطمة الزهراء حسين',
+                email: 'fatima.zahra@company.com',
+                department: 'المالية',
+                position: 'محاسبة رئيسية',
+                salary: 15000,
+                hireDate: '2022-08-20',
+                status: 'نشط',
+                phone: '0502345678',
+                address: 'حي النسيم، الرياض'
+            },
+            {
+                id: 3,
+                name: 'خالد عبد الرحمن',
+                email: 'khaled.abdulrahman@company.com',
+                department: 'المبيعات',
+                position: 'مدير مبيعات',
+                salary: 22000,
+                hireDate: '2021-03-10',
+                status: 'نشط',
+                phone: '0503456789',
+                address: 'حي العليا، الرياض'
+            },
+            {
+                id: 4,
+                name: 'سارة إبراهيم',
+                email: 'sarah.ibrahim@company.com',
+                department: 'الإدارة',
+                position: 'مديرة الموارد البشرية',
+                salary: 25000,
+                hireDate: '2020-11-05',
+                status: 'نشط',
+                phone: '0504567890',
+                address: 'حي الروضة، الرياض'
+            },
+            {
+                id: 5,
+                name: 'محمد علي أحمد',
+                email: 'mohammed.ali@company.com',
+                department: 'العمليات',
+                position: 'منسق عمليات',
+                salary: 14000,
+                hireDate: '2023-06-12',
+                status: 'نشط',
+                phone: '0505678901',
+                address: 'حي اليرموك، الرياض'
+            }
+        ];
+
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let filteredEmployees = [...employees];
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+                
+                // Load employees
+                loadEmployees();
+            }, 1000);
+            
+            // Sidebar toggle for mobile
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+            }
+            
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 768 && !sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+
+        // Load and display employees
+        function loadEmployees() {
+            const tableBody = document.getElementById('employees-table-body');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageEmployees = filteredEmployees.slice(startIndex, endIndex);
+            
+            tableBody.innerHTML = '';
+            
+            pageEmployees.forEach((employee, index) => {
+                const row = document.createElement('tr');
+                row.className = 'table-row border-b border-white border-opacity-10';
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <img src="https://via.placeholder.com/40x40/3b82f6/ffffff?text=${employee.name.charAt(0)}" 
+                                 alt="${employee.name}" class="w-10 h-10 rounded-full mr-3">
+                            <div>
+                                <p class="text-white font-medium">${employee.name}</p>
+                                <p class="text-gray-300 text-sm">${employee.email}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-white">${employee.department}</td>
+                    <td class="px-6 py-4 text-white">${employee.position}</td>
+                    <td class="px-6 py-4 text-green-400 font-medium">${formatCurrency(employee.salary)}</td>
+                    <td class="px-6 py-4 text-white">${formatDate(employee.hireDate)}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded-full text-xs ${getStatusColor(employee.status)}">
+                            ${employee.status}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center space-x-2">
+                            <button onclick="viewEmployee(${employee.id})" class="text-blue-400 hover:text-blue-300 mr-2" title="عرض التفاصيل">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="editEmployee(${employee.id})" class="text-green-400 hover:text-green-300 mr-2" title="تعديل">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteEmployee(${employee.id})" class="text-red-400 hover:text-red-300" title="حذف">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                
+                // Add animation delay
+                setTimeout(() => {
+                    row.classList.add('fade-in');
+                }, index * 100);
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Update pagination
+            updatePagination();
+        }
+
+        // Search employees
+        function searchEmployees() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const departmentFilter = document.getElementById('department-filter').value;
+            const statusFilter = document.getElementById('status-filter').value;
+            
+            filteredEmployees = employees.filter(employee => {
+                const matchesSearch = employee.name.toLowerCase().includes(searchTerm) || 
+                                    employee.email.toLowerCase().includes(searchTerm);
+                const matchesDepartment = !departmentFilter || employee.department === departmentFilter;
+                const matchesStatus = !statusFilter || employee.status === statusFilter;
+                
+                return matchesSearch && matchesDepartment && matchesStatus;
+            });
+            
+            currentPage = 1;
+            loadEmployees();
+            
+            // Update count
+            document.getElementById('employees-count').textContent = filteredEmployees.length;
+        }
+
+        // Filter employees
+        function filterEmployees() {
+            searchEmployees(); // Reuse search logic
+        }
+
+        // Update pagination
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredEmployees.length);
+            
+            document.getElementById('showing-start').textContent = startIndex + 1;
+            document.getElementById('showing-end').textContent = endIndex;
+            document.getElementById('current-page').textContent = currentPage;
+            
+            // Update button states
+            document.getElementById('prev-page').disabled = currentPage === 1;
+            document.getElementById('next-page').disabled = currentPage === totalPages;
+        }
+
+        // Change page
+        function changePage(direction) {
+            const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+            const newPage = currentPage + direction;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                loadEmployees();
+            }
+        }
+
+        // View employee details
+        function viewEmployee(id) {
+            const employee = employees.find(emp => emp.id === id);
+            if (!employee) return;
+            
+            const modal = document.getElementById('employee-modal');
+            const title = document.getElementById('employee-modal-title');
+            const content = document.getElementById('employee-modal-content');
+            
+            title.textContent = `تفاصيل الموظف: ${employee.name}`;
+            
+            content.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Personal Information -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-bold text-white mb-4">
+                            <i class="fas fa-user mr-2"></i>
+                            المعلومات الشخصية
+                        </h4>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">الاسم الكامل:</span>
+                                <span class="text-white">${employee.name}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">البريد الإلكتروني:</span>
+                                <span class="text-white">${employee.email}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">رقم الهاتف:</span>
+                                <span class="text-white">${employee.phone}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">العنوان:</span>
+                                <span class="text-white">${employee.address}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Information -->
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-bold text-white mb-4">
+                            <i class="fas fa-briefcase mr-2"></i>
+                            المعلومات الوظيفية
+                        </h4>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">القسم:</span>
+                                <span class="text-white">${employee.department}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">المنصب:</span>
+                                <span class="text-white">${employee.position}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">الراتب:</span>
+                                <span class="text-green-400">${formatCurrency(employee.salary)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">تاريخ التعيين:</span>
+                                <span class="text-white">${formatDate(employee.hireDate)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-300">الحالة:</span>
+                                <span class="px-2 py-1 rounded-full text-xs ${getStatusColor(employee.status)}">${employee.status}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex space-x-3 mt-6">
+                    <button onclick="editEmployee(${employee.id})" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition">
+                        <i class="fas fa-edit mr-2"></i>
+                        تعديل البيانات
+                    </button>
+                    <button onclick="printEmployeeDetails(${employee.id})" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition">
+                        <i class="fas fa-print mr-2"></i>
+                        طباعة
+                    </button>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        // Close employee modal
+        function closeEmployeeModal() {
+            const modal = document.getElementById('employee-modal');
+            modal.classList.add('hidden');
+        }
+
+        // Edit employee
+        function editEmployee(id) {
+            showNotification('سيتم فتح نموذج تعديل الموظف قريباً', 'info');
+            closeEmployeeModal();
+        }
+
+        // Delete employee
+        function deleteEmployee(id) {
+            if (confirm('هل أنت متأكد من حذف هذا الموظف؟')) {
+                employees = employees.filter(emp => emp.id !== id);
+                filteredEmployees = filteredEmployees.filter(emp => emp.id !== id);
+                loadEmployees();
+                showNotification('تم حذف الموظف بنجاح', 'success');
+            }
+        }
+
+        // Print employee details
+        function printEmployeeDetails(id) {
+            showNotification('سيتم فتح نافذة الطباعة قريباً', 'info');
+        }
+
+        // Import dialog functions
+        function showImportDialog() {
+            const modal = document.getElementById('import-modal');
+            modal.classList.remove('hidden');
+        }
+
+        function closeImportDialog() {
+            const modal = document.getElementById('import-modal');
+            modal.classList.add('hidden');
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                showNotification(`تم اختيار ملف: ${file.name}`, 'info');
+                closeImportDialog();
+                // Process file upload here
+            }
+        }
+
+        function downloadTemplate() {
+            showNotification('سيتم تحميل قالب Excel قريباً', 'info');
+        }
+
+        // Utility functions
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ar-SA', {
+                style: 'currency',
+                currency: 'SAR'
+            }).format(amount);
+        }
+
+        function formatDate(date) {
+            return new Intl.DateTimeFormat('ar-SA', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }).format(new Date(date));
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'نشط':
+                    return 'bg-green-500 text-white';
+                case 'في إجازة':
+                    return 'bg-yellow-500 text-white';
+                case 'منتهية خدماته':
+                    return 'bg-red-500 text-white';
+                default:
+                    return 'bg-gray-500 text-white';
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+            } text-white`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        function showNotifications() {
+            showNotification('سيتم عرض الإشعارات قريباً', 'info');
+        }
+
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('user-menu');
+            if (userMenu) {
+                userMenu.classList.toggle('hidden');
+            }
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            const userMenu = document.getElementById('user-menu');
+            const userMenuButton = document.querySelector('[onclick="toggleUserMenu()"]');
+            
+            if (userMenu && !userMenu.contains(e.target) && !userMenuButton.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + F: Focus search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+                e.preventDefault();
+                document.getElementById('search').focus();
+            }
+            
+            // Escape: Close modals
+            if (e.key === 'Escape') {
+                closeEmployeeModal();
+                closeImportDialog();
+            }
+        });
+    </script>
+</body>
+</html>
