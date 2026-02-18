@@ -2,6 +2,8 @@ node_modules/
 server/node_modules/
 client/node_modules/
 server/gaming.db
+server/gaming.db-shm
+server/gaming.db-wal
 client/build/
 .env
 *.log
