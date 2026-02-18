@@ -1,0 +1,16 @@
+{
+  "name": "gamezone-platform",
+  "version": "1.0.0",
+  "description": "GameZone - Mobile Gaming Platform like Plato",
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm start --prefix client",
+    "build:client": "npm run build --prefix client",
+    "start": "npm start --prefix server",
+    "setup": "npm run install:all && npm run build:client"
+  },
+  "keywords": ["gaming", "mobile", "multiplayer", "socket.io", "react"],
+  "author": "GameZone",
+  "license": "MIT"
+}
